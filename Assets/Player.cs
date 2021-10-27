@@ -10,23 +10,32 @@ public class Player : MonoBehaviour
     [SerializeField] float speedToAutoStop = 0.45f;
     private Vector3 slingStart;
     private Vector3 slingEnd;
+    [SerializeField]
+    GameManager manager;
+    Rigidbody2D rb;
 
     // Start is called before the first frame update
     void Start()
     {
-        
+        rb = GetComponent<Rigidbody2D>();
     }
 
     // Update is called once per frame
     void Update()
     {
+        Vector3 oldPos = transform.position;
+        transform.position = manager.ConstrainPosition(transform.position);
+        if (isMoving && oldPos != transform.position) {
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+            isMoving = false;
+        }
+        
         Camera.main.transform.position = transform.position;
-        Rigidbody2D rb = GetComponent<Rigidbody2D>();
         if (!isMoving) {
             // If not slinging and the mouse button is released
             if (!isSlinging && Input.GetMouseButtonDown(0)) {
                 isSlinging = true;
-                Debug.Log("Starting sling");
                 slingStart = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             } else if (isSlinging) {
                 // If the mouse button is pressed
@@ -46,7 +55,6 @@ public class Player : MonoBehaviour
                 }
             }
         } else {
-            Debug.Log(rb.velocity.magnitude);
             if (Time.time - timeStartedMoving > 0.1f && rb.velocity.magnitude < speedToAutoStop) {
                 rb.velocity = Vector2.zero;
                 rb.angularVelocity = 0f;
