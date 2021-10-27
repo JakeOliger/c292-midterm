@@ -54,4 +54,6 @@ public class GameManager : MonoBehaviour
     public Player GetPlayer() {
         return _player;
     }
+
+
 }
