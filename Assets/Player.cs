@@ -6,6 +6,7 @@ public class Player : MonoBehaviour
 {
     private bool isMoving = false;
     private bool isSlinging = false;
+    private bool killedEnemyInShot = false;
     private float timeStartedMoving = -1;
     private int score = 0;
     [SerializeField] float speedToAutoStop = 0.45f;
@@ -62,6 +63,9 @@ public class Player : MonoBehaviour
                 rb.velocity = Vector2.zero;
                 rb.angularVelocity = 0f;
                 isMoving = false;
+                if (!killedEnemyInShot)
+                    KillPlayer();
+                killedEnemyInShot = false;
             }
         }
     }
@@ -82,6 +86,7 @@ public class Player : MonoBehaviour
                 score += tri.GetBounty();
                 _manager.UpdateScoreLabel(score);
                 _enemySpawner.KillTriangle(tri);
+                killedEnemyInShot = true;
             }
         } else {
             KillPlayer();
