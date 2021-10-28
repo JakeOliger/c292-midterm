@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Triangle : MonoBehaviour
+public class Triangle : Enemy
 {
     [SerializeField] Player _player;
     [SerializeField] float _rotationSpeed = 20f;
@@ -12,6 +12,7 @@ public class Triangle : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        bounty = 10;
     }
 
     // Update is called once per frame

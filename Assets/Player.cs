@@ -7,11 +7,14 @@ public class Player : MonoBehaviour
     private bool isMoving = false;
     private bool isSlinging = false;
     private float timeStartedMoving = -1;
+    private int score = 0;
     [SerializeField] float speedToAutoStop = 0.45f;
     private Vector3 slingStart;
     private Vector3 slingEnd;
-    [SerializeField]
-    GameManager manager;
+    [SerializeField] GameManager _manager;
+
+    [SerializeField] EnemySpawner _enemySpawner;
+    [SerializeField] GameObject _playerDeathEffect;
     Rigidbody2D rb;
 
     // Start is called before the first frame update
@@ -24,7 +27,7 @@ public class Player : MonoBehaviour
     void Update()
     {
         Vector3 oldPos = transform.position;
-        transform.position = manager.ConstrainPosition(transform.position);
+        transform.position = _manager.ConstrainPosition(transform.position);
         if (isMoving && oldPos != transform.position) {
             rb.velocity = Vector2.zero;
             rb.angularVelocity = 0f;
@@ -62,4 +65,28 @@ public class Player : MonoBehaviour
             }
         }
     }
+
+    void KillPlayer() {
+        Vector3 pdePos = new Vector3(transform.position.x, transform.position.y, 0);
+        Instantiate(_playerDeathEffect, pdePos, Quaternion.identity);
+        Destroy(gameObject);
+        _manager.GameOver();
+    }
+
+    // called when the cube hits the floor
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if (isMoving) {
+            Triangle tri = other.GetComponent<Triangle>();
+            if (tri) {
+                score += tri.GetBounty();
+                _manager.UpdateScoreLabel(score);
+                _enemySpawner.KillTriangle(tri);
+            }
+        } else {
+            KillPlayer();
+        }
+    }
+
+    public int GetScore() { return score; }
 }

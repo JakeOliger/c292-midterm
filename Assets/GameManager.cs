@@ -1,11 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
     [SerializeField] private Player _player;
     [SerializeField] private GameObject background;
+    [SerializeField] private EnemySpawner _enemySpawner;
     Vector3 _gameBounds;
     Vector3 _gameCenter;
     private float _cameraHeight;
@@ -14,6 +17,9 @@ public class GameManager : MonoBehaviour
     private float maxX;
     private float minY;
     private float maxY;
+    [SerializeField] TextMeshProUGUI _scoreLabel;
+    [SerializeField] GameObject _gameOverCanvas;
+    private bool _isGameOver = false;
 
     // Start is called before the first frame update
     void Start()
@@ -30,6 +36,32 @@ public class GameManager : MonoBehaviour
         maxX = _gameCenter.x + _gameBounds.x / 2;
         minY = _gameCenter.y - _gameBounds.y / 2;
         maxY = _gameCenter.y + _gameBounds.y / 2;
+    }
+
+    void Update() {
+        if (_isGameOver) {
+            if (Input.GetKeyDown("space")) {
+                _isGameOver = false;
+                _gameOverCanvas.SetActive(false);
+                SceneManager.LoadScene("SampleScene", LoadSceneMode.Single);
+            }
+        }
+    }
+
+    public void UpdateScoreLabel(int score) {
+        _scoreLabel.text = "Score: " + score;
+    }
+
+    public void UpdateScoreLabel() {
+        _scoreLabel.text = "Score: " + _player.GetScore();
+    }
+
+    public void GameOver() {
+        UpdateScoreLabel();
+        _isGameOver = true;
+        _enemySpawner.KillAllEnemies();
+        _enemySpawner.PauseSpawning();
+        _gameOverCanvas.SetActive(true);
     }
 
     public Vector3 ConstrainPosition(Vector3 position) {
@@ -54,6 +86,4 @@ public class GameManager : MonoBehaviour
     public Player GetPlayer() {
         return _player;
     }
-
-
 }

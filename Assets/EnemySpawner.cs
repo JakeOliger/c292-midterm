@@ -11,6 +11,8 @@ public class EnemySpawner : MonoBehaviour
     [SerializeField] private int _cullCooldown = 3;
     [SerializeField] private int _maxTriangles = 10;
     [SerializeField] private int _triangleSpawnCooldown = 5;
+    [SerializeField] GameObject enemyDeathEffect;
+    private bool pauseSpawning = false;
     private int _numTriangles = 0;
     private List<Triangle> _triangles = new List<Triangle>();
     private float _freeTriangleSpawns = 0;
@@ -31,7 +33,10 @@ public class EnemySpawner : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (_freeTriangleSpawns > 0 || (_numTriangles < _maxTriangles && Time.time - _lastSpawn > _triangleSpawnCooldown)) {
+        bool underTriCount = _numTriangles < _maxTriangles;
+        bool freeTris = _freeTriangleSpawns > 0;
+        bool cooldownFinished = Time.time - _lastSpawn > _triangleSpawnCooldown;
+        if (!pauseSpawning && (freeTris || (underTriCount && cooldownFinished))) {
             SpawnTriangle();
         }
 
@@ -57,6 +62,8 @@ public class EnemySpawner : MonoBehaviour
     // Uses a radius instead of a box because I like that better and this only runs every few seconds,
     // so using the more costly sqrt function won't matter much at all
     void CullDistantEnemies() {
+        if (_player == null) return;
+        
         float cornerX = Camera.main.transform.position.x + _cameraWidth;
         float cornerY = Camera.main.transform.position.y + _cameraHeight;
         float pX = _player.transform.position.x;
@@ -77,17 +84,43 @@ public class EnemySpawner : MonoBehaviour
 
         // Check it twice
         foreach (Triangle tri in toCull) {
-            if (_triangles.Remove(tri)) {
-                Destroy(tri.gameObject);
-                _numTriangles--;
-                _freeTriangleSpawns++;
-            } else {
-                Debug.LogError("Failed to despawn a Triangle!");
-            }
+            KillTriangle(tri);
         }
 
         _lastCull = Time.time;
     }
+
+    public void KillTriangle(Triangle tri) {
+        if (_triangles.Remove(tri)) {
+            Instantiate(enemyDeathEffect, tri.gameObject.transform.position, Quaternion.identity);
+            Destroy(tri.gameObject);
+            _numTriangles--;
+            _freeTriangleSpawns++;
+        } else {
+            Debug.LogError("Failed to despawn a Triangle!");
+        }
+    }
+
+    public void KillAllEnemies() {
+        while (_triangles.Count > 0) {
+            Triangle tri = _triangles[0];
+            KillTriangle(tri);
+        }
+    }
+
+    public void KillTriangle(GameObject tri_go) {
+        Triangle tri = null;
+        foreach (Triangle t in _triangles) {
+            if (t.gameObject == tri_go) {
+                tri = t;
+                break;
+            }
+        }
+        KillTriangle(tri);
+    }
+
+    public void PauseSpawning() { pauseSpawning = true; }
+    public void UnpauseSpawning() { pauseSpawning = false; }
 
     // Returns a Vector3 containing a random off-but-near-screen location
     Vector3 GetValidSpawnLocation() {
