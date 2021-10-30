@@ -88,6 +88,14 @@ public class Player : MonoBehaviour
                 _enemySpawner.KillTriangle(tri);
                 killedEnemyInShot = true;
             }
+
+            Square sq = other.GetComponent<Square>();
+            if (sq) {
+                score += sq.GetBounty();
+                _manager.UpdateScoreLabel(score);
+                _enemySpawner.KillSquare(sq);
+                killedEnemyInShot = true;
+            }
         } else {
             KillPlayer();
         }

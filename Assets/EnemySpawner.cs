@@ -5,18 +5,25 @@ using UnityEngine;
 public class EnemySpawner : MonoBehaviour
 {
     [SerializeField] GameManager _manager;
-    [SerializeField] Triangle trianglePrefab;
+    [SerializeField] Enemy trianglePrefab;
+    [SerializeField] Enemy squarePrefab;
     private Player _player;
     [SerializeField] private int _cullDistance = 7;
     [SerializeField] private int _cullCooldown = 3;
     [SerializeField] private int _maxTriangles = 10;
+    [SerializeField] private int _maxSquares = 10;
     [SerializeField] private int _triangleSpawnCooldown = 5;
+    [SerializeField] private int _squareSpawnCooldown = 5;
     [SerializeField] GameObject enemyDeathEffect;
     private bool pauseSpawning = false;
     private int _numTriangles = 0;
-    private List<Triangle> _triangles = new List<Triangle>();
+    private int _numSquares = 0;
+    private List<Enemy> _triangles = new List<Enemy>();
+    private List<Enemy> _squares = new List<Enemy>();
     private float _freeTriangleSpawns = 0;
-    private float _lastSpawn;
+    private float _freeSquareSpawns = 0;
+    private float _lastTriangleSpawn;
+    private float _lastSquareSpawn;
     private float _lastCull;
     private float _cameraHeight;
     private float _cameraWidth;
@@ -25,7 +32,7 @@ public class EnemySpawner : MonoBehaviour
     void Start()
     {
         _player = _manager.GetPlayer();
-        _lastSpawn = _lastCull = Time.time;
+        _lastTriangleSpawn = _lastCull = Time.time;
         _cameraHeight = Camera.main.orthographicSize;
         _cameraWidth = _cameraHeight * Screen.width / Screen.height;
     }
@@ -33,11 +40,20 @@ public class EnemySpawner : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        bool underTriCount = _numTriangles < _maxTriangles;
-        bool freeTris = _freeTriangleSpawns > 0;
-        bool cooldownFinished = Time.time - _lastSpawn > _triangleSpawnCooldown;
-        if (!pauseSpawning && (freeTris || (underTriCount && cooldownFinished))) {
-            SpawnTriangle();
+        if (!pauseSpawning) {
+            bool underTriCount = _numTriangles < _maxTriangles;
+            bool freeTris = _freeTriangleSpawns > 0;
+            bool triCooldownFinished = Time.time - _lastTriangleSpawn > _triangleSpawnCooldown;
+            if (freeTris || (underTriCount && triCooldownFinished)) {
+                SpawnEnemy("triangle");
+            }
+
+            bool underSqCount = _numSquares < _maxSquares;
+            bool freeSqs = _freeSquareSpawns > 0;
+            bool sqCooldownFinished = Time.time - _lastSquareSpawn > _squareSpawnCooldown;
+            if (freeSqs || (underSqCount && sqCooldownFinished)) {
+                SpawnEnemy("square");
+            }
         }
 
         if (Time.time - _lastCull > _cullCooldown) {
@@ -45,16 +61,38 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
-    // Spawns a triangle in a random location around the viewport and aims it roughly at the player
-    void SpawnTriangle() {
-        Triangle tri = Instantiate(trianglePrefab, GetValidSpawnLocation(), Quaternion.identity);
-        tri.SetPlayer(_player);
-        tri.LookNearPlayer();
-        _triangles.Add(tri);
-        _lastSpawn = Time.time;
-        _numTriangles++;
-        if (_freeTriangleSpawns > 0)
-            _freeTriangleSpawns--;
+    void SpawnEnemy(string eType) {
+        Enemy prefab = null, e = null;
+
+        eType = eType.ToLowerInvariant();
+
+        bool isTriangle = eType.Equals("triangle");
+        bool isSquare = eType.Equals("square");
+
+        if (isTriangle)
+            prefab = trianglePrefab;
+        else if (isSquare)
+            prefab = squarePrefab;
+
+        if (prefab == null) return;
+
+        e = Instantiate(prefab, GetValidSpawnLocation(), Quaternion.identity);
+        e.SetPlayer(_player);
+        e.LookNearPlayer();
+
+        if (isTriangle) {
+            _triangles.Add(e);
+            _numTriangles++;
+            _lastTriangleSpawn = Time.time;
+            if (_freeTriangleSpawns > 0)
+                _freeTriangleSpawns--;
+        } else if (isSquare) {
+            _squares.Add(e);
+            _numSquares++;
+            _lastSquareSpawn = Time.time;
+            if (_freeSquareSpawns > 0)
+                _freeSquareSpawns--;
+        }
     }
 
     // Kills all enemies that are outside of a radius of the viewport.
@@ -70,10 +108,10 @@ public class EnemySpawner : MonoBehaviour
         float pY = _player.transform.position.y;
         float maxSurvivalDistance = _cullDistance + Mathf.Sqrt(Mathf.Pow(cornerX - pX, 2) + Mathf.Pow(cornerY - pY, 2));
 
-        List<Triangle> toCull = new List<Triangle>();
+        List<Enemy> toCull = new List<Enemy>();
 
         // Make a list of who's naughty and who's nice
-        foreach (Triangle tri in _triangles) {
+        foreach (Enemy tri in _triangles) {
             float tX = tri.transform.position.x;
             float tY = tri.transform.position.y;
             float d = Mathf.Sqrt(Mathf.Pow(tX - pX, 2) + Mathf.Pow(tY - pY, 2));
@@ -83,28 +121,63 @@ public class EnemySpawner : MonoBehaviour
         }
 
         // Check it twice
-        foreach (Triangle tri in toCull) {
-            KillTriangle(tri);
+        foreach (Enemy e in toCull) {
+            Triangle t = e as Triangle;
+            if (t != null) {
+                KillTriangle(t);
+                _freeTriangleSpawns++;
+                continue;
+            }
+
+            Square s = e as Square;
+            if (s != null) {
+                KillSquare(s);
+                _freeSquareSpawns++;
+                continue;
+            }
         }
 
         _lastCull = Time.time;
     }
 
+    public void KillEnemy(Enemy e) {
+        Instantiate(enemyDeathEffect, e.gameObject.transform.position, Quaternion.identity);
+        Destroy(e.gameObject);
+    }
+
     public void KillTriangle(Triangle tri) {
         if (_triangles.Remove(tri)) {
-            Instantiate(enemyDeathEffect, tri.gameObject.transform.position, Quaternion.identity);
-            Destroy(tri.gameObject);
+            KillEnemy(tri);
             _numTriangles--;
-            _freeTriangleSpawns++;
         } else {
             Debug.LogError("Failed to despawn a Triangle!");
         }
     }
 
+    public void KillSquare(Square sq) {
+        if (_squares.Remove(sq)) {
+            KillEnemy(sq);
+            _numSquares--;
+        } else {
+            Debug.LogError("Failed to despawn a Square!");
+        }
+    }
+
     public void KillAllEnemies() {
         while (_triangles.Count > 0) {
-            Triangle tri = _triangles[0];
-            KillTriangle(tri);
+            Triangle tri = _triangles[0] as Triangle;
+            if (tri != null)
+                KillTriangle(tri);
+            else
+                Debug.LogError("Non-Triangle in _triangles List");
+        }
+
+        while (_squares.Count > 0) {
+            Square sq = _squares[0] as Square;
+            if (sq != null)
+                KillSquare(sq);
+            else
+                Debug.LogError("Non-Square in _squares List");
         }
     }
 
