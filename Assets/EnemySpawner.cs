@@ -41,6 +41,9 @@ public class EnemySpawner : MonoBehaviour
     void Update()
     {
         if (!pauseSpawning) {
+            // Could maybe improve this by having there be a certain percent chance for a spawn,
+            // or having a range of times that the spawns could randomly happen in.
+            // As it is, the spawns feel very robotic.
             bool underTriCount = _numTriangles < _maxTriangles;
             bool freeTris = _freeTriangleSpawns > 0;
             bool triCooldownFinished = Time.time - _lastTriangleSpawn > _triangleSpawnCooldown;

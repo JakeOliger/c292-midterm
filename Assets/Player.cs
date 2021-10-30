@@ -58,7 +58,12 @@ public class Player : MonoBehaviour
                     transform.eulerAngles = Vector3.forward * angle + Vector3.forward * 90;
                 }
             }
+        // If we're moving
         } else {
+            // Time.time - timeStartedMoving accounts for the fact that it takes a few frames
+            // for the velocity values to update, so we don't think we immediately stopped moving by mistake
+            // Otherwise, we're just waiting until we slow down below speedToAutoStop before fully stopping and
+            // checking to see if we've killed anything in that shot.
             if (Time.time - timeStartedMoving > 0.1f && rb.velocity.magnitude < speedToAutoStop) {
                 rb.velocity = Vector2.zero;
                 rb.angularVelocity = 0f;

@@ -64,6 +64,9 @@ public class GameManager : MonoBehaviour
         _gameOverCanvas.SetActive(true);
     }
 
+    // Returns a position within the gamespace that gives the center position of
+    // the camera without allowing the camera to show anything outside of the level
+    // i.e., it constrains the position of the camera to show only the gamespace
     public Vector3 ConstrainPosition(Vector3 position) {
         float x = position.x;
         float y = position.y;

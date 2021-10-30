@@ -41,6 +41,7 @@ public class Enemy : MonoBehaviour
         transform.rotation = Quaternion.Euler(0, 0, targetRotation);
     }
 
+    // Sets the enemy rotation to a random direction
     public void LookRandomly() {
         if (!_player) {
             Debug.LogError("Tried to look at a nonexistant player!");
