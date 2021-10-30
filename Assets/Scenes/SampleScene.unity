@@ -255,10 +255,10 @@ RectTransform:
   m_Father: {fileID: 198498441}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -356.6933, y: 217.8289}
-  m_SizeDelta: {x: 128.6187, y: 28.6589}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 105.3067, y: -42.171097}
+  m_SizeDelta: {x: 128.61871, y: 28.658905}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &464999715
 MonoBehaviour:
@@ -726,8 +726,8 @@ MonoBehaviour:
   _cullCooldown: 3
   _maxTriangles: 10
   _maxSquares: 3
-  _triangleSpawnCooldown: 5
-  _squareSpawnCooldown: 1
+  _triangleSpawnCooldown: 6
+  _squareSpawnCooldown: 3
   enemyDeathEffect: {fileID: 8254883642437270832, guid: 7637175e1276b1746a62b172831872a3, type: 3}
 --- !u!1 &660872997
 GameObject:

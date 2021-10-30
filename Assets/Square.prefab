@@ -98,8 +98,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _player: {fileID: 0}
-  _movementSpeed: 0.5
-  _rotationSpeed: 10
+  _movementSpeed: 1
+  _rotationSpeed: 8
+  _spawnCooldown: 3
 --- !u!50 &3758622593196352945
 Rigidbody2D:
   serializedVersion: 4

@@ -61,7 +61,13 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
-    void SpawnEnemy(string eType) {
+    // Returns spawned enemy if successful, null otherwise
+    public Enemy SpawnEnemy(string eType) {
+        return SpawnEnemy(eType, GetValidSpawnLocation());
+    }
+
+    // Returns spawned enemy if successful, null otherwise
+    public Enemy SpawnEnemy(string eType, Vector3 location) {
         Enemy prefab = null, e = null;
 
         eType = eType.ToLowerInvariant();
@@ -74,9 +80,9 @@ public class EnemySpawner : MonoBehaviour
         else if (isSquare)
             prefab = squarePrefab;
 
-        if (prefab == null) return;
+        if (prefab == null) return null;
 
-        e = Instantiate(prefab, GetValidSpawnLocation(), Quaternion.identity);
+        e = Instantiate(prefab, location, Quaternion.identity);
         e.SetPlayer(_player);
         e.LookNearPlayer();
 
@@ -86,13 +92,24 @@ public class EnemySpawner : MonoBehaviour
             _lastTriangleSpawn = Time.time;
             if (_freeTriangleSpawns > 0)
                 _freeTriangleSpawns--;
+            return e;
         } else if (isSquare) {
-            _squares.Add(e);
-            _numSquares++;
-            _lastSquareSpawn = Time.time;
-            if (_freeSquareSpawns > 0)
-                _freeSquareSpawns--;
+            Square sq = e as Square;
+            if (sq != null) {
+                sq.SetEnemySpawner(this);
+                _squares.Add(sq);
+                _numSquares++;
+                _lastSquareSpawn = Time.time;
+                if (_freeSquareSpawns > 0)
+                    _freeSquareSpawns--;
+                return sq;
+            } else {
+                Debug.LogError("Cannot cast Enemy as Square");
+                return null;
+            }
         }
+
+        return null;
     }
 
     // Kills all enemies that are outside of a radius of the viewport.
@@ -120,6 +137,16 @@ public class EnemySpawner : MonoBehaviour
             }
         }
 
+        // Make a list of who's naughty and who's nice
+        foreach (Enemy sq in _squares) {
+            float tX = sq.transform.position.x;
+            float tY = sq.transform.position.y;
+            float d = Mathf.Sqrt(Mathf.Pow(tX - pX, 2) + Mathf.Pow(tY - pY, 2));
+            if (d > maxSurvivalDistance) {
+                toCull.Add(sq);
+            }
+        }
+
         // Check it twice
         foreach (Enemy e in toCull) {
             Triangle t = e as Triangle;
@@ -140,7 +167,7 @@ public class EnemySpawner : MonoBehaviour
         _lastCull = Time.time;
     }
 
-    public void KillEnemy(Enemy e) {
+    void KillEnemy(Enemy e) {
         Instantiate(enemyDeathEffect, e.gameObject.transform.position, Quaternion.identity);
         Destroy(e.gameObject);
     }

@@ -41,6 +41,15 @@ public class Enemy : MonoBehaviour
         transform.rotation = Quaternion.Euler(0, 0, targetRotation);
     }
 
+    public void LookRandomly() {
+        if (!_player) {
+            Debug.LogError("Tried to look at a nonexistant player!");
+            return;
+        }
+
+        transform.rotation = Quaternion.Euler(0, 0, Random.Range(0, 360));
+    }
+
     protected void Move() {
         Vector3 playerPos = _player.transform.position;
         Vector3 myPos = transform.position;

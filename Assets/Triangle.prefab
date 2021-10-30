@@ -98,6 +98,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _player: {fileID: 0}
+  _movementSpeed: 3
   _rotationSpeed: 20
 --- !u!50 &5159982289376680156
 Rigidbody2D:
