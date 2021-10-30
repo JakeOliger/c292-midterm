@@ -721,10 +721,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _manager: {fileID: 1276785732}
   trianglePrefab: {fileID: 4993428005847032149, guid: 1f10b15da7f96fb4b8af068e774bd8f5, type: 3}
+  squarePrefab: {fileID: 3758622593196352957, guid: 9d932a91d7beff84c80dfd2eb945db00, type: 3}
   _cullDistance: 7
   _cullCooldown: 3
   _maxTriangles: 10
-  _triangleSpawnCooldown: 1
+  _maxSquares: 3
+  _triangleSpawnCooldown: 5
+  _squareSpawnCooldown: 1
   enemyDeathEffect: {fileID: 8254883642437270832, guid: 7637175e1276b1746a62b172831872a3, type: 3}
 --- !u!1 &660872997
 GameObject:
