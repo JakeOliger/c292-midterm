@@ -13,7 +13,6 @@ public class Player : MonoBehaviour
     private Vector3 slingStart;
     private Vector3 slingEnd;
     [SerializeField] GameManager _manager;
-
     [SerializeField] EnemySpawner _enemySpawner;
     [SerializeField] GameObject _playerDeathEffect;
     Rigidbody2D rb;
@@ -29,6 +28,7 @@ public class Player : MonoBehaviour
     {
         Vector3 oldPos = transform.position;
         transform.position = _manager.ConstrainPosition(transform.position);
+        // If we hit the edge of the world, don't kill the player, but do stop them
         if (isMoving && oldPos != transform.position) {
             rb.velocity = Vector2.zero;
             rb.angularVelocity = 0f;
@@ -39,40 +39,59 @@ public class Player : MonoBehaviour
         if (!isMoving) {
             // If not slinging and the mouse button is released
             if (!isSlinging && Input.GetMouseButtonDown(0)) {
-                isSlinging = true;
-                slingStart = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                StartSlinging();
             } else if (isSlinging) {
-                // If the mouse button is pressed
+                // If the mouse button is released
                 if (Input.GetMouseButtonUp(0)) {
-                    slingEnd = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                    Vector3 diff = slingStart - slingEnd;
-                    Vector2 f = new Vector2(diff.x, diff.y);
-                    rb.AddForce(f * 100);
-                    isSlinging = false;
-                    isMoving = true;
-                    timeStartedMoving = Time.time;
+                    StopSlinging();
                 // If we're in the middle of slinging, keep the rotation updated
                 } else {
-                    Vector3 currentMousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-                    float angle = Mathf.Rad2Deg * Mathf.Atan2(slingStart.y - currentMousePos.y, slingStart.x - currentMousePos.x);
-                    transform.eulerAngles = Vector3.forward * angle + Vector3.forward * 90;
+                    UpdateSlingingRotation();
                 }
             }
         // If we're moving
         } else {
+            if (Input.GetMouseButtonDown(0)) {
+                StartSlinging();
+                StopPlayer();
             // Time.time - timeStartedMoving accounts for the fact that it takes a few frames
             // for the velocity values to update, so we don't think we immediately stopped moving by mistake
             // Otherwise, we're just waiting until we slow down below speedToAutoStop before fully stopping and
             // checking to see if we've killed anything in that shot.
-            if (Time.time - timeStartedMoving > 0.1f && rb.velocity.magnitude < speedToAutoStop) {
-                rb.velocity = Vector2.zero;
-                rb.angularVelocity = 0f;
-                isMoving = false;
-                if (!killedEnemyInShot)
-                    KillPlayer();
-                killedEnemyInShot = false;
+            } else if (Time.time - timeStartedMoving > 0.1f && rb.velocity.magnitude < speedToAutoStop) {
+                StopPlayer();
             }
         }
+    }
+
+    void StopPlayer() {
+        rb.velocity = Vector2.zero;
+        rb.angularVelocity = 0f;
+        isMoving = false;
+        if (!killedEnemyInShot)
+            KillPlayer();
+        killedEnemyInShot = false;
+    }
+
+    void StartSlinging() {
+        isSlinging = true;
+        slingStart = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+    }
+
+    void StopSlinging() {
+        slingEnd = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector3 diff = slingStart - slingEnd;
+        Vector2 f = new Vector2(diff.x, diff.y);
+        rb.AddForce(f * 100);
+        isSlinging = false;
+        isMoving = true;
+        timeStartedMoving = Time.time;
+    }
+
+    void UpdateSlingingRotation() {
+        Vector3 currentMousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        float angle = Mathf.Rad2Deg * Mathf.Atan2(slingStart.y - currentMousePos.y, slingStart.x - currentMousePos.x);
+        transform.eulerAngles = Vector3.forward * angle + Vector3.forward * 90;
     }
 
     void KillPlayer() {
