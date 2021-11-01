@@ -64,6 +64,7 @@ public class Player : MonoBehaviour
         }
     }
 
+    // Stops the player and kills the player if they haven't hit anything in that shot
     void StopPlayer() {
         rb.velocity = Vector2.zero;
         rb.angularVelocity = 0f;
@@ -73,11 +74,13 @@ public class Player : MonoBehaviour
         killedEnemyInShot = false;
     }
 
+    // Begins "Slinging mode," the click-and-drag process of choosing a direction for the next shot
     void StartSlinging() {
         isSlinging = true;
         slingStart = Camera.main.ScreenToWorldPoint(Input.mousePosition);
     }
 
+    // Ends slinging, begins shot
     void StopSlinging() {
         slingEnd = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Vector3 diff = slingStart - slingEnd;
@@ -88,12 +91,14 @@ public class Player : MonoBehaviour
         timeStartedMoving = Time.time;
     }
 
+    // Points player in the direction of the sling
     void UpdateSlingingRotation() {
         Vector3 currentMousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         float angle = Mathf.Rad2Deg * Mathf.Atan2(slingStart.y - currentMousePos.y, slingStart.x - currentMousePos.x);
         transform.eulerAngles = Vector3.forward * angle + Vector3.forward * 90;
     }
 
+    // Kills the player, ends the game
     void KillPlayer() {
         Vector3 pdePos = new Vector3(transform.position.x, transform.position.y, 0);
         Instantiate(_playerDeathEffect, pdePos, Quaternion.identity);
@@ -111,14 +116,14 @@ public class Player : MonoBehaviour
                 _manager.UpdateScoreLabel(score);
                 _enemySpawner.KillTriangle(tri);
                 killedEnemyInShot = true;
-            }
-
-            Square sq = other.GetComponent<Square>();
-            if (sq) {
-                score += sq.GetBounty();
-                _manager.UpdateScoreLabel(score);
-                _enemySpawner.KillSquare(sq);
-                killedEnemyInShot = true;
+            } else {
+                Square sq = other.GetComponent<Square>();
+                if (sq) {
+                    score += sq.GetBounty();
+                    _manager.UpdateScoreLabel(score);
+                    _enemySpawner.KillSquare(sq);
+                    killedEnemyInShot = true;
+                }
             }
         } else {
             KillPlayer();

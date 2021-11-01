@@ -724,9 +724,9 @@ MonoBehaviour:
   squarePrefab: {fileID: 3758622593196352957, guid: 9d932a91d7beff84c80dfd2eb945db00, type: 3}
   _cullDistance: 7
   _cullCooldown: 3
-  _maxTriangles: 10
-  _maxSquares: 3
-  _triangleSpawnCooldown: 6
+  _maxTriangles: 30
+  _maxSquares: 15
+  _triangleSpawnCooldown: 1
   _squareSpawnCooldown: 3
   enemyDeathEffect: {fileID: 8254883642437270832, guid: 7637175e1276b1746a62b172831872a3, type: 3}
 --- !u!1 &660872997

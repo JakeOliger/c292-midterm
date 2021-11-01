@@ -15,7 +15,7 @@ This project was created using Unity. The sprites used for gameplay were found o
 
 - ~~Basic goals all completed~~
 - Target goals
-  - Allow stopping a shot short to change directions
+  - ~~Allow stopping a shot short to change directions~~
   - Better animations and enemy movement intelligence
 - Stretch goals
   - "Circle" enemies
