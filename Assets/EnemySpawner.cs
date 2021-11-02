@@ -14,7 +14,8 @@ public class EnemySpawner : MonoBehaviour
     [SerializeField] private int _maxSquares = 10;
     [SerializeField] private int _triangleSpawnCooldown = 5;
     [SerializeField] private int _squareSpawnCooldown = 5;
-    [SerializeField] GameObject enemyDeathEffect;
+    [SerializeField] GameObject _enemyDeathEffect;
+    [SerializeField] GameObject _enemyDeathSound;
     private bool pauseSpawning = false;
     private int _numTriangles = 0;
     private int _numSquares = 0;
@@ -154,14 +155,14 @@ public class EnemySpawner : MonoBehaviour
         foreach (Enemy e in toCull) {
             Triangle t = e as Triangle;
             if (t != null) {
-                KillTriangle(t);
+                KillTriangle(t, true);
                 _freeTriangleSpawns++;
                 continue;
             }
 
             Square s = e as Square;
             if (s != null) {
-                KillSquare(s);
+                KillSquare(s, true);
                 _freeSquareSpawns++;
                 continue;
             }
@@ -170,23 +171,27 @@ public class EnemySpawner : MonoBehaviour
         _lastCull = Time.time;
     }
 
-    void KillEnemy(Enemy e) {
-        Instantiate(enemyDeathEffect, e.gameObject.transform.position, Quaternion.identity);
+    // Should only be called by KillTriangle and KillSquare
+    void KillEnemy(Enemy e, bool silently=false) {
+        Instantiate(_enemyDeathEffect, e.gameObject.transform.position, Quaternion.identity);
+        if (!silently) {
+            Instantiate(_enemyDeathSound, e.gameObject.transform.position, Quaternion.identity);
+        }
         Destroy(e.gameObject);
     }
 
-    public void KillTriangle(Triangle tri) {
+    public void KillTriangle(Triangle tri, bool silently=false) {
         if (_triangles.Remove(tri)) {
-            KillEnemy(tri);
+            KillEnemy(tri, silently);
             _numTriangles--;
         } else {
             Debug.LogError("Failed to despawn a Triangle!");
         }
     }
 
-    public void KillSquare(Square sq) {
+    public void KillSquare(Square sq, bool silently=false) {
         if (_squares.Remove(sq)) {
-            KillEnemy(sq);
+            KillEnemy(sq, silently);
             _numSquares--;
         } else {
             Debug.LogError("Failed to despawn a Square!");
@@ -194,10 +199,12 @@ public class EnemySpawner : MonoBehaviour
     }
 
     public void KillAllEnemies() {
+        Instantiate(_enemyDeathSound, gameObject.transform.position, Quaternion.identity);
+
         while (_triangles.Count > 0) {
             Triangle tri = _triangles[0] as Triangle;
             if (tri != null)
-                KillTriangle(tri);
+                KillTriangle(tri, true);
             else
                 Debug.LogError("Non-Triangle in _triangles List");
         }
@@ -205,21 +212,10 @@ public class EnemySpawner : MonoBehaviour
         while (_squares.Count > 0) {
             Square sq = _squares[0] as Square;
             if (sq != null)
-                KillSquare(sq);
+                KillSquare(sq, true);
             else
                 Debug.LogError("Non-Square in _squares List");
         }
-    }
-
-    public void KillTriangle(GameObject tri_go) {
-        Triangle tri = null;
-        foreach (Triangle t in _triangles) {
-            if (t.gameObject == tri_go) {
-                tri = t;
-                break;
-            }
-        }
-        KillTriangle(tri);
     }
 
     public void PauseSpawning() { pauseSpawning = true; }

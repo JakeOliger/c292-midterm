@@ -15,12 +15,15 @@ public class Player : MonoBehaviour
     [SerializeField] GameManager _manager;
     [SerializeField] EnemySpawner _enemySpawner;
     [SerializeField] GameObject _playerDeathEffect;
+    [SerializeField] GameObject _playerDeathSound;
+    AudioSource _pewSound;
     Rigidbody2D rb;
 
     // Start is called before the first frame update
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        _pewSound = GetComponent<AudioSource>();
     }
 
     // Update is called once per frame
@@ -89,6 +92,10 @@ public class Player : MonoBehaviour
         isSlinging = false;
         isMoving = true;
         timeStartedMoving = Time.time;
+        if (_pewSound)
+            _pewSound.Play();
+        else
+            Debug.LogError("Couldn't play pew sound");
     }
 
     // Points player in the direction of the sling
@@ -102,6 +109,7 @@ public class Player : MonoBehaviour
     void KillPlayer() {
         Vector3 pdePos = new Vector3(transform.position.x, transform.position.y, 0);
         Instantiate(_playerDeathEffect, pdePos, Quaternion.identity);
+        Instantiate(_playerDeathSound, pdePos, Quaternion.identity);
         Destroy(gameObject);
         _manager.GameOver();
     }

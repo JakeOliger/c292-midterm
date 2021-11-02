@@ -52,6 +52,11 @@ public class Enemy : MonoBehaviour
     }
 
     protected void Move() {
+        if (!_player) {
+            Debug.LogError("Player does not exist while trying to move enemy");
+            return;
+        }
+
         Vector3 playerPos = _player.transform.position;
         Vector3 myPos = transform.position;
 
