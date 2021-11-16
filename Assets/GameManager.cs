@@ -19,6 +19,7 @@ public class GameManager : MonoBehaviour
     private float maxY;
     [SerializeField] TextMeshProUGUI _scoreLabel;
     [SerializeField] GameObject _gameOverCanvas;
+    [SerializeField] GameObject _startScreen;
     private bool _isGameOver = false;
 
     // Start is called before the first frame update
@@ -36,6 +37,12 @@ public class GameManager : MonoBehaviour
         maxX = _gameCenter.x + _gameBounds.x / 2;
         minY = _gameCenter.y - _gameBounds.y / 2;
         maxY = _gameCenter.y + _gameBounds.y / 2;
+    }
+
+    public void BeginGame() {
+        _enemySpawner.UnpauseSpawning();
+        _startScreen.SetActive(false);
+        _player.AlertGameHasStarted();
     }
 
     void Update() {

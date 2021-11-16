@@ -9,6 +9,7 @@ public class Player : MonoBehaviour
     private bool killedEnemyInShot = false;
     private float timeStartedMoving = -1;
     private int score = 0;
+    private bool gameHasStarted = false;
     [SerializeField] float speedToAutoStop = 0.45f;
     private Vector3 slingStart;
     private Vector3 slingEnd;
@@ -29,6 +30,9 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (!gameHasStarted)
+            return;
+
         Vector3 oldPos = transform.position;
         transform.position = _manager.ConstrainPosition(transform.position);
         // If we hit the edge of the world, don't kill the player, but do stop them
@@ -83,6 +87,10 @@ public class Player : MonoBehaviour
         slingStart = Camera.main.ScreenToWorldPoint(Input.mousePosition);
     }
 
+    public void AlertGameHasStarted() {
+        gameHasStarted = true;
+    }
+
     // Ends slinging, begins shot
     void StopSlinging() {
         slingEnd = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -131,6 +139,14 @@ public class Player : MonoBehaviour
                     _manager.UpdateScoreLabel(score);
                     _enemySpawner.KillSquare(sq);
                     killedEnemyInShot = true;
+                } else {
+                    Circle cir = other.GetComponent<Circle>();
+                    if (cir) {
+                        score += cir.GetBounty();
+                        _manager.UpdateScoreLabel(score);
+                        _enemySpawner.KillCircle(cir);
+                        killedEnemyInShot = true;
+                    }
                 }
             }
         } else {

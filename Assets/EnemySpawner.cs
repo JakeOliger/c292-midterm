@@ -7,24 +7,32 @@ public class EnemySpawner : MonoBehaviour
     [SerializeField] GameManager _manager;
     [SerializeField] Enemy trianglePrefab;
     [SerializeField] Enemy squarePrefab;
+    [SerializeField] Enemy circlePrefab;
+    [SerializeField] LineRenderer linePrefab;
     private Player _player;
     [SerializeField] private int _cullDistance = 7;
     [SerializeField] private int _cullCooldown = 3;
     [SerializeField] private int _maxTriangles = 10;
     [SerializeField] private int _maxSquares = 10;
+    [SerializeField] private int _maxCircles = 10;
     [SerializeField] private int _triangleSpawnCooldown = 5;
     [SerializeField] private int _squareSpawnCooldown = 5;
+    [SerializeField] private int _circleSpawnCooldown = 5;
     [SerializeField] GameObject _enemyDeathEffect;
     [SerializeField] GameObject _enemyDeathSound;
-    private bool pauseSpawning = false;
+    private bool pauseSpawning = true;
     private int _numTriangles = 0;
     private int _numSquares = 0;
+    private int _numCircles = 0;
     private List<Enemy> _triangles = new List<Enemy>();
     private List<Enemy> _squares = new List<Enemy>();
+    private List<Enemy> _circles = new List<Enemy>();
     private float _freeTriangleSpawns = 0;
     private float _freeSquareSpawns = 0;
+    private float _freeCircleSpawns = 0;
     private float _lastTriangleSpawn;
     private float _lastSquareSpawn;
+    private float _lastCircleSpawn;
     private float _lastCull;
     private float _cameraHeight;
     private float _cameraWidth;
@@ -33,9 +41,13 @@ public class EnemySpawner : MonoBehaviour
     void Start()
     {
         _player = _manager.GetPlayer();
-        _lastTriangleSpawn = _lastCull = Time.time;
+        ResetSpawnTimers();
         _cameraHeight = Camera.main.orthographicSize;
         _cameraWidth = _cameraHeight * Screen.width / Screen.height;
+    }
+
+    public void ResetSpawnTimers() {
+        _lastTriangleSpawn = _lastSquareSpawn = _lastCircleSpawn = _lastCull = Time.time;
     }
 
     // Update is called once per frame
@@ -58,6 +70,13 @@ public class EnemySpawner : MonoBehaviour
             if (freeSqs || (underSqCount && sqCooldownFinished)) {
                 SpawnEnemy("square");
             }
+
+            bool underCirCount = _numCircles < _maxCircles;
+            bool freeCirs = _freeCircleSpawns > 0;
+            bool cirCooldownFinished = Time.time - _lastCircleSpawn > _circleSpawnCooldown;
+            if (freeCirs || (underCirCount && cirCooldownFinished)) {
+                SpawnEnemy("circle");
+            }
         }
 
         if (Time.time - _lastCull > _cullCooldown) {
@@ -67,7 +86,11 @@ public class EnemySpawner : MonoBehaviour
 
     // Returns spawned enemy if successful, null otherwise
     public Enemy SpawnEnemy(string eType) {
-        return SpawnEnemy(eType, GetValidSpawnLocation());
+        Enemy e = SpawnEnemy(eType, GetValidSpawnLocation());
+        if (e == null) {
+            Debug.LogError("Error spawning enemy of type '" + eType + "'");
+        }
+        return e;
     }
 
     // Returns spawned enemy if successful, null otherwise
@@ -78,11 +101,14 @@ public class EnemySpawner : MonoBehaviour
 
         bool isTriangle = eType.Equals("triangle");
         bool isSquare = eType.Equals("square");
+        bool isCircle = eType.Equals("circle");
 
         if (isTriangle)
             prefab = trianglePrefab;
         else if (isSquare)
             prefab = squarePrefab;
+        else if (isCircle)
+            prefab = circlePrefab;
 
         if (prefab == null) return null;
 
@@ -91,29 +117,52 @@ public class EnemySpawner : MonoBehaviour
         e.LookNearPlayer();
 
         if (isTriangle) {
-            _triangles.Add(e);
-            _numTriangles++;
-            _lastTriangleSpawn = Time.time;
-            if (_freeTriangleSpawns > 0)
-                _freeTriangleSpawns--;
-            return e;
+            return SpawnTriangle(e);
         } else if (isSquare) {
-            Square sq = e as Square;
-            if (sq != null) {
-                sq.SetEnemySpawner(this);
-                _squares.Add(sq);
-                _numSquares++;
-                _lastSquareSpawn = Time.time;
-                if (_freeSquareSpawns > 0)
-                    _freeSquareSpawns--;
-                return sq;
-            } else {
-                Debug.LogError("Cannot cast Enemy as Square");
-                return null;
-            }
+            return SpawnSquare(e);
+        } else if (isCircle) {
+            return SpawnCircle(e);
+        } else {
+            return null;
         }
+    }
 
-        return null;
+    Enemy SpawnTriangle(Enemy e) {
+        _triangles.Add(e);
+        _numTriangles++;
+        _lastTriangleSpawn = Time.time;
+        if (_freeTriangleSpawns > 0)
+            _freeTriangleSpawns--;
+        return e;
+    }
+
+    Enemy SpawnSquare(Enemy e) {
+        Square sq = e as Square;
+        if (sq != null) {
+            sq.SetEnemySpawner(this);
+            _squares.Add(sq);
+            _numSquares++;
+            _lastSquareSpawn = Time.time;
+            if (_freeSquareSpawns > 0)
+                _freeSquareSpawns--;
+        }
+        return sq;
+    }
+
+    Enemy SpawnCircle(Enemy e) {
+        Circle cir = e as Circle;
+        if (cir != null) {
+            cir.SetLineRendererPrefab(linePrefab);
+            foreach (Circle c in _circles) {
+                cir.AddConnection(c);
+            }
+            _circles.Add(cir);
+            _numCircles++;
+            _lastCircleSpawn = Time.time;
+            if (_freeCircleSpawns > 0)
+                _freeCircleSpawns--;
+        }
+        return cir;
     }
 
     // Kills all enemies that are outside of a radius of the viewport.
@@ -151,6 +200,16 @@ public class EnemySpawner : MonoBehaviour
             }
         }
 
+        // Make a list of who's naughty and who's nice
+        foreach (Enemy cir in _circles) {
+            float tX = cir.transform.position.x;
+            float tY = cir.transform.position.y;
+            float d = Mathf.Sqrt(Mathf.Pow(tX - pX, 2) + Mathf.Pow(tY - pY, 2));
+            if (d > maxSurvivalDistance) {
+                toCull.Add(cir);
+            }
+        }
+
         // Check it twice
         foreach (Enemy e in toCull) {
             Triangle t = e as Triangle;
@@ -166,6 +225,13 @@ public class EnemySpawner : MonoBehaviour
                 _freeSquareSpawns++;
                 continue;
             }
+
+            Circle c = e as Circle;
+            if (c != null) {
+                KillCircle(c, true);
+                _freeCircleSpawns++;
+                continue;
+            }
         }
 
         _lastCull = Time.time;
@@ -178,6 +244,7 @@ public class EnemySpawner : MonoBehaviour
             Instantiate(_enemyDeathSound, e.gameObject.transform.position, Quaternion.identity);
         }
         Destroy(e.gameObject);
+        Destroy(e);
     }
 
     public void KillTriangle(Triangle tri, bool silently=false) {
@@ -195,6 +262,16 @@ public class EnemySpawner : MonoBehaviour
             _numSquares--;
         } else {
             Debug.LogError("Failed to despawn a Square!");
+        }
+    }
+
+    public void KillCircle(Circle cir, bool silently=false) {
+        if (_circles.Remove(cir)) {
+            cir.EmptyConnections();
+            KillEnemy(cir, silently);
+            _numCircles--;
+        } else {
+            Debug.LogError("Failed to despawn a Circle!");
         }
     }
 
@@ -216,10 +293,21 @@ public class EnemySpawner : MonoBehaviour
             else
                 Debug.LogError("Non-Square in _squares List");
         }
+
+        while (_circles.Count > 0) {
+            Circle cir = _circles[0] as Circle;
+            if (cir != null)
+                KillCircle(cir, true);
+            else
+                Debug.LogError("Non-Circle in _circles List");
+        }
     }
 
     public void PauseSpawning() { pauseSpawning = true; }
-    public void UnpauseSpawning() { pauseSpawning = false; }
+    public void UnpauseSpawning() {
+        pauseSpawning = false;
+        ResetSpawnTimers();
+    }
 
     // Returns a Vector3 containing a random off-but-near-screen location
     Vector3 GetValidSpawnLocation() {
