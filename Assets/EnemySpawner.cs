@@ -82,6 +82,31 @@ public class EnemySpawner : MonoBehaviour
         if (Time.time - _lastCull > _cullCooldown) {
             CullDistantEnemies();
         }
+
+        // This could be made more efficient by treating each cluster of circle connections
+        // as an undirected graph and doing a breadth-first-search style iteration through
+        // each graph, but this works for now with the way connections are implemented
+        bool hasHitPlayer = false;
+        List<int> visited = new List<int>();
+        foreach (Circle c in _circles) {
+            if (visited.Contains(c.GetInstanceID())) continue;
+            visited.Add(c.GetInstanceID());
+
+            List<Circle> connections = c.GetConnections();
+            foreach (Circle conn in connections) {
+                Vector2 direction = (conn.transform.position - c.transform.position).normalized;
+                float distance = Mathf.Sqrt(Mathf.Pow(conn.transform.position.x - c.transform.position.x, 2) + Mathf.Pow(conn.transform.position.y - c.transform.position.y, 2));
+                RaycastHit2D hit = Physics2D.Raycast(c.transform.position, direction, distance, LayerMask.GetMask("Player"));
+                Debug.DrawRay(c.transform.position, direction, Color.red, 0.5f);
+                if (hit.collider != null) {
+                    hasHitPlayer = true;
+                    break;
+                }
+            }
+            if (hasHitPlayer) break;
+        }
+
+        _player.SetIsTakingDamage(hasHitPlayer);
     }
 
     // Returns spawned enemy if successful, null otherwise
@@ -348,6 +373,6 @@ public class EnemySpawner : MonoBehaviour
         x = Random.Range(minX, maxX);
         y = Random.Range(minY, maxY);
 
-        return new Vector3(x, y, 0);
+        return new Vector3(x, y, transform.position.z);
     }
 }

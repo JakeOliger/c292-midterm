@@ -5,8 +5,6 @@ using UnityEngine;
 
 public class Circle : Enemy
 {
-    private List<Circle> _connections = new List<Circle>();
-    private List<LineRenderer> _lines = new List<LineRenderer>();
     private List<Tuple<Circle, LineRenderer>> _conns = new List<Tuple<Circle, LineRenderer>>();
     LineRenderer _linePrefab;
 
@@ -52,6 +50,15 @@ public class Circle : Enemy
                 return true;
         }
         return false;
+    }
+
+    public List<Circle> GetConnections() {
+        List<Circle> circles = new List<Circle>();
+        foreach (Tuple<Circle, LineRenderer> conn in _conns) {
+            if (conn.Item1 != null)
+                circles.Add(conn.Item1);
+        }
+        return circles;
     }
 
     // Update is called once per frame
