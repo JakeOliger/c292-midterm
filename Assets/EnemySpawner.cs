@@ -2,6 +2,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/**
+ * EnemySpawner
+ *
+ * So the EnemySpawner is really more of an EnemyManager. It handles
+ * the spawning of new enemies and also controls despawning, checking
+ * if they're too far from the player to stay alive, as well as
+ * some of the enemy logic such as the circle lattice damage mechanic.
+ * It could use some refactoring, but for now... it works!
+ */
 public class EnemySpawner : MonoBehaviour
 {
     [SerializeField] GameManager _manager;
@@ -10,7 +19,8 @@ public class EnemySpawner : MonoBehaviour
     [SerializeField] Enemy circlePrefab;
     [SerializeField] LineRenderer linePrefab;
     private Player _player;
-    [SerializeField] private int _cullDistance = 7;
+    // Distance off-screen that enemies begin de-spawning and re-spawning closer to the player
+    [SerializeField] private int _cullDistance = 10;
     [SerializeField] private int _cullCooldown = 3;
     [SerializeField] private int _maxTriangles = 10;
     [SerializeField] private int _maxSquares = 10;
@@ -139,6 +149,7 @@ public class EnemySpawner : MonoBehaviour
 
         e = Instantiate(prefab, location, Quaternion.identity);
         e.SetPlayer(_player);
+        e.SetEnemySpawner(this);
         e.LookNearPlayer();
 
         if (isTriangle) {
@@ -164,7 +175,6 @@ public class EnemySpawner : MonoBehaviour
     Enemy SpawnSquare(Enemy e) {
         Square sq = e as Square;
         if (sq != null) {
-            sq.SetEnemySpawner(this);
             _squares.Add(sq);
             _numSquares++;
             _lastSquareSpawn = Time.time;

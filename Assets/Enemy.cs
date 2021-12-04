@@ -3,6 +3,7 @@ using UnityEngine;
 public class Enemy : MonoBehaviour
 {
     [SerializeField] protected Player _player;
+    protected EnemySpawner _enemySpawner;
     [SerializeField] protected float _movementSpeed = 1f;
     [SerializeField] protected float _rotationSpeed = 20f;
     protected int bounty = 0;
@@ -14,6 +15,10 @@ public class Enemy : MonoBehaviour
 
     public void SetPlayer(Player player) {
         _player = player;
+    }
+
+    public void SetEnemySpawner(EnemySpawner enemySpawner) {
+        _enemySpawner = enemySpawner;
     }
 
     public int GetBounty() { return bounty; }

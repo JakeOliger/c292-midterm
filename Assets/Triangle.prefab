@@ -99,7 +99,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _player: {fileID: 0}
   _movementSpeed: 3
-  _rotationSpeed: 20
+  _rotationSpeed: 50
+  _minDirectionChangeCooldown: 2
+  _maxDirectionChangeCooldown: 4
+  _minTotalDirectionChanges: 3
+  _maxTotalDirectionChanges: 8
 --- !u!50 &5159982289376680156
 Rigidbody2D:
   serializedVersion: 4
