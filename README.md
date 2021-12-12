@@ -14,15 +14,15 @@ This project was created using Unity. The sprites used for gameplay were found o
 ### To Do List
 
 - ~~Basic goals all completed~~
-- Basic Goals
+- ~~Basic Goals~~
   - ~~Allow stopping a shot short to change directions~~
   - ~~Music and sound effects~~
   - ~~"Circle" enemies~~
     - ~~Player health system~~
     - ~~Lattices between Circles~~
   - ~~Start screen with play button~~
-  - Better animations
-  - Enemy movement intelligence
+  - ~~Better animations~~
+  - ~~Enemy movement intelligence~~
 - Target/Stretch Goals
   - Expand gamespace to allow infinitely going in one direction by looping the gamespace
   - Power-ups
